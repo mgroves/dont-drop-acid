@@ -144,7 +144,7 @@ public class TxDemo {
             JsonObject interactions = JsonObject.create()
                     .put("type", "interactions")
                     .put("conferenceId", conferenceId)
-                    .put( "events", JsonObject.ja());
+                    .put("events", JsonObject.ja());
             bucket.defaultCollection().upsert(interactionId, interactions);
 
             JsonObject conference = JsonObject.create()
