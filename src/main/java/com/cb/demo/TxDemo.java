@@ -44,17 +44,20 @@ public class TxDemo {
     public static void main(String[] args) {
 
         //1) Connect to the cluster
+        System.out.println("Connecting to Couchbase...");
         Cluster cluster = Cluster.connect(CLUSTER_ADDRESS, USERNAME, PASSWORD);
         Bucket bucket = cluster.bucket(BUCKET);
         Collection col = bucket.defaultCollection();
 
         //2) Create Event for the account
+        System.out.println("Creating initial documents (if necessary)...");
         createInitialDocuments(bucket);
 
         // 3) Create the transaction config :
         // Durability: NONE/MAJORITY/PERSIST_TO_MAJORITY/MAJORITY_AND_PERSIST_ON_MASTER
         // TIMEOUT: Max TTL of the transaction
         // OBS: As I'm running in a single node the Durability is set to None
+        System.out.println("Creating transaction object...");
         Transactions transactions = Transactions.create(cluster, TransactionConfigBuilder.create()
                 // NONE is the only level that will work with a *single* node, there is no replication involved
                 .durabilityLevel(TransactionDurabilityLevel.NONE)
@@ -72,16 +75,12 @@ public class TxDemo {
 
                 .build());
 
-        System.out.println();
-        System.out.println();
         System.out.println("Press ENTER to continue...");
-        System.out.println();
-        System.out.println();
         System.console().readLine();
 
         try {
 
-
+            System.out.println("Running transaction...");
             transactions.run((ctx) -> {
 
                 //Getting all documents involved in the transactions
@@ -118,7 +117,9 @@ public class TxDemo {
                 // );                                
 
                 //replace both documents
+                System.out.println("\tUpdating conference document...");
                 ctx.replace(conferenceTx, conference);
+                System.out.println("\tUpdating interactions document...");
                 ctx.replace(interactionsTx, interactions);
 
                 //uncomment this line to force a rollback
@@ -126,6 +127,7 @@ public class TxDemo {
 
                 //optional
                 //ctx.commit();
+                System.out.println("Transaction complete.");
             });
         } catch (TransactionFailed e) {
             e.printStackTrace();
