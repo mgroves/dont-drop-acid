@@ -37,8 +37,8 @@ public class TxDemo {
     private static final String USERNAME = "Administrator";
     private static final String PASSWORD = "password";
 
-    private static String conferenceId = "ndcOslo2020";
-    private static String interactionId = "ndcOslo2020::interactions";
+    private static String conferenceId = "manningK8s";
+    private static String interactionId = "manningK8s::interactions";
     private static final Logger logger = LoggerFactory.getLogger(TxDemo.class);
 
     public static void main(String[] args) {
@@ -149,8 +149,8 @@ public class TxDemo {
 
             JsonObject conference = JsonObject.create()
                 .put("type", "conference")
-                .put("name", "NDC Oslo 2020")
-                .put("location", "Norway");
+                .put("name", "Manning K8S")
+                .put("location", "Twitch");
             bucket.defaultCollection().upsert(conferenceId, conference);
         }
     }
