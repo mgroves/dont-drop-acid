@@ -37,8 +37,8 @@ public class TxDemo {
     private static final String USERNAME = "Administrator";
     private static final String PASSWORD = "password";
 
-    private static String conferenceId = "manningK8s";
-    private static String interactionId = "manningK8s::interactions";
+    private static String conferenceId = "manningK8S";
+    private static String interactionId = "manningK8S::interactions";
     private static final Logger logger = LoggerFactory.getLogger(TxDemo.class);
 
     public static void main(String[] args) {
@@ -97,24 +97,24 @@ public class TxDemo {
                 conference.put("lastInteraction", interactionDate);
 
                 // updating 'events' document
-                interactions.getArray("events").add(
-                    JsonObject.create()
-                            .put("type", "CFP")
-                            .put("intDate", interactionDate)
-                            .put("description", "Submitted to the CFP")
-                );
+                // interactions.getArray("events").add(
+                //     JsonObject.create()
+                //             .put("type", "CFP")
+                //             .put("intDate", interactionDate)
+                //             .put("description", "Submitted to the CFP")
+                // );
                 // interactions.getArray("events").add(
                 //     JsonObject.create()
                 //             .put("type", "PRESENTATION")
                 //             .put("intDate", interactionDate)
                 //             .put("description", "Delivered ACID presentation")
                 // );
-                // interactions.getArray("events").add(
-                //     JsonObject.create()
-                //             .put("type", "SLACK")
-                //             .put("intDate", interactionDate)
-                //             .put("description", "Answered questions in Slack")
-                // );                                
+                interactions.getArray("events").add(
+                    JsonObject.create()
+                            .put("type", "SLACK")
+                            .put("intDate", interactionDate)
+                            .put("description", "Answered questions in Slack")
+                );                                
 
                 //replace both documents
                 System.out.println("\tUpdating conference document...");
@@ -147,17 +147,18 @@ public class TxDemo {
             logger.info("documents already exist");
         } catch(Exception e) {
             logger.info("Creating account events...");
-            JsonObject interactions = JsonObject.create()
-                    .put("type", "interactions")
-                    .put("conferenceId", conferenceId)
-                    .put("events", JsonObject.ja());
-            bucket.defaultCollection().upsert(interactionId, interactions);
 
             JsonObject conference = JsonObject.create()
                 .put("type", "conference")
                 .put("name", "Manning K8S")
                 .put("location", "Twitch");
             bucket.defaultCollection().upsert(conferenceId, conference);
+
+            JsonObject interactions = JsonObject.create()
+                    .put("type", "interactions")
+                    .put("conferenceId", conferenceId)
+                    .put("events", JsonObject.ja());
+            bucket.defaultCollection().upsert(interactionId, interactions);
         }
     }
 
