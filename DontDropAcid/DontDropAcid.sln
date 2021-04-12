@@ -3,7 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30611.23
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DontDropAcid", "DontDropAcid\DontDropAcid.csproj", "{82F8B274-2F1E-4E72-B76F-FB2E1FAD34DE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DontDropAcid", "DontDropAcid\DontDropAcid.csproj", "{82F8B274-2F1E-4E72-B76F-FB2E1FAD34DE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0ABD9C3F-0A20-4B17-A7A2-E00F00F27C89}"
+	ProjectSection(SolutionItems) = preProject
+		..\README.md = ..\README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

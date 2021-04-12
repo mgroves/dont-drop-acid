@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Couchbase.Transactions" Version="1.0.0-alpha.1" />
+    <PackageReference Include="Couchbase.Transactions" Version="1.0.0-beta.2" />
   </ItemGroup>
 
 </Project>

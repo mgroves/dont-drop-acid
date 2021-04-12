@@ -13,35 +13,43 @@ namespace DontDropAcid
         private static ICluster _cluster;
         private static IBucket _bucket;
         private static ICouchbaseCollection _coll;
+        private static IScope _scope;
 
         static async Task Main(string[] args)
         {
-            // connect to Couchbase
+            // SETUP: connect to Couchbase
             _cluster = await Cluster.ConnectAsync(
                 "couchbase://localhost",
                 "Administrator",
                 "password");
             _bucket = await _cluster.BucketAsync("matt");
-            _coll = _bucket.DefaultCollection();
+            _scope = await _bucket.ScopeAsync("myScope");
+            _coll = await _scope.CollectionAsync("myCollection");
 
-
-            // create a 'conference' document and a 'conference activities' document
+            // SETUP: create a 'conference' document and a 'conference activities' document
             await SetupInitialDocuments();
 
+            // STEP 1: create transactions object
             var transactions = Transactions.Create(_cluster, 
                 TransactionConfigBuilder.Create()
-                    .DurabilityLevel(DurabilityLevel.None)
+                    .DurabilityLevel(DurabilityLevel.MajorityAndPersistToActive)    // since I have 1 node, replication must be 0, or this will throw exception
                     .Build());
 
+            Console.WriteLine("Press ENTER to continue");
+            Console.ReadLine();
+
+            // STEP 2: transaction operations
             await transactions.RunAsync(async (ctx) =>
             {
-                var confDoc = await ctx.GetAsync(_coll, "manningK8s");
-                var actsDoc = await ctx.GetAsync(_coll, "manningK8s::activities");
+                var now = DateTime.Now;
+
+                // FIRST: get the two document I want to change
+                var confDoc = await ctx.GetAsync(_coll, "dataLove2021");
+                var actsDoc = await ctx.GetAsync(_coll, "dataLove2021::activities");
                 var conf = confDoc.ContentAs<Conference>();
                 var acts = actsDoc.ContentAs<ConferenceActivities>();
 
-                var now = DateTime.Now;
-
+                // SECOND: add an event to the "activities" document
                 acts.Events.Add(new ConferenceEvent
                 {
                     Type = "CFP",
@@ -56,19 +64,25 @@ namespace DontDropAcid
                 // });
                 // acts.Events.Add(new ConferenceEvent
                 // {
-                //     Type = "SLACK",
+                //     Type = "SPATIAL",
                 //     DtActivity = now,
-                //     Desc = "Answered questions in Slack"
+                //     Desc = "Answered questions in Spatial Chat"
                 // });
 
+                // THIRD: change the "conference" document
                 conf.Followups = (conf.Followups ?? 0) + 1;
                 conf.LastActivity = now;
 
+                // FOURTH: write the changes
                 await ctx.ReplaceAsync(confDoc, conf);
+
+                // OPTIONAL STEP: fail right in the middle of the transaction making two writes
+                // var fail = true;
+                // if(fail) throw new Exception("Something went wrong!");
+                
                 await ctx.ReplaceAsync(actsDoc, acts);
 
-                //throw new Exception("Something went wrong!");
-
+                // FIFTH: commit (implied)
             });
 
             await _cluster.DisposeAsync();
@@ -76,21 +90,21 @@ namespace DontDropAcid
 
         private static async Task SetupInitialDocuments()
         {
-            var confExists = await _coll.ExistsAsync("manningK8s");
+            var confExists = await _coll.ExistsAsync("dataLove2021");
             if (confExists.Exists)
                 return;
-            var confActivitiesExists = await _coll.ExistsAsync("manningK8s::activities");
+            var confActivitiesExists = await _coll.ExistsAsync("dataLove2021::activities");
             if (confActivitiesExists.Exists)
                 return;
 
-            await _coll.InsertAsync("manningK8s", new Conference
+            await _coll.InsertAsync("dataLove2021", new Conference
             {
-                Name = "Manning K8S Day",
-                Location = "twitch.tv/manningpublications"
+                Name = "Data Love 2021",
+                Location = "https://datalove.konfy.care/"
             });
-            await _coll.InsertAsync("manningK8s::activities", new ConferenceActivities
+            await _coll.InsertAsync("dataLove2021::activities", new ConferenceActivities
             {
-                ConferenceId = "manningK8s",
+                ConferenceId = "dataLove2021",
                 Events = new List<ConferenceEvent>()
             });
         }
