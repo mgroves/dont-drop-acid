@@ -13,7 +13,6 @@ namespace DontDropAcid
         private static ICluster _cluster;
         private static IBucket _bucket;
         private static ICouchbaseCollection _coll;
-        private static IScope _scope;
 
         static async Task Main(string[] args)
         {
@@ -23,8 +22,7 @@ namespace DontDropAcid
                 "Administrator",
                 "password");
             _bucket = await _cluster.BucketAsync("matt");
-            _scope = await _bucket.ScopeAsync("myScope");
-            _coll = await _scope.CollectionAsync("myCollection");
+            _coll = await _bucket.DefaultCollectionAsync();
 
             // SETUP: create a 'conference' document and a 'conference activities' document
             await SetupInitialDocuments();
@@ -32,7 +30,7 @@ namespace DontDropAcid
             // STEP 1: create transactions object
             var transactions = Transactions.Create(_cluster, 
                 TransactionConfigBuilder.Create()
-                    .DurabilityLevel(DurabilityLevel.MajorityAndPersistToActive)    // since I have 1 node, replication must be 0, or this will throw exception
+                    .DurabilityLevel(DurabilityLevel.None)    // since I have 1 node, replication must be 0, or this will throw exception
                     .Build());
 
             Console.WriteLine("Press ENTER to continue");
@@ -44,8 +42,8 @@ namespace DontDropAcid
                 var now = DateTime.Now;
 
                 // FIRST: get the two document I want to change
-                var confDoc = await ctx.GetAsync(_coll, "dataLove2021");
-                var actsDoc = await ctx.GetAsync(_coll, "dataLove2021::activities");
+                var confDoc = await ctx.GetAsync(_coll, "thatConference2021");
+                var actsDoc = await ctx.GetAsync(_coll, "thatConference2021::activities");
                 var conf = confDoc.ContentAs<Conference>();
                 var acts = actsDoc.ContentAs<ConferenceActivities>();
 
@@ -77,8 +75,8 @@ namespace DontDropAcid
                 await ctx.ReplaceAsync(confDoc, conf);
 
                 // OPTIONAL STEP: fail right in the middle of the transaction making two writes
-                // var fail = true;
-                // if(fail) throw new Exception("Something went wrong!");
+                //var fail = true;
+                //if(fail) throw new Exception("Something went wrong!");
                 
                 await ctx.ReplaceAsync(actsDoc, acts);
 
@@ -90,21 +88,21 @@ namespace DontDropAcid
 
         private static async Task SetupInitialDocuments()
         {
-            var confExists = await _coll.ExistsAsync("dataLove2021");
+            var confExists = await _coll.ExistsAsync("thatConference2021");
             if (confExists.Exists)
                 return;
-            var confActivitiesExists = await _coll.ExistsAsync("dataLove2021::activities");
+            var confActivitiesExists = await _coll.ExistsAsync("thatConference2021::activities");
             if (confActivitiesExists.Exists)
                 return;
 
-            await _coll.InsertAsync("dataLove2021", new Conference
+            await _coll.InsertAsync("thatConference2021", new Conference
             {
-                Name = "Data Love 2021",
-                Location = "https://datalove.konfy.care/"
+                Name = "That Conference 2021",
+                Location = "https://that.us/"
             });
-            await _coll.InsertAsync("dataLove2021::activities", new ConferenceActivities
+            await _coll.InsertAsync("thatConference2021::activities", new ConferenceActivities
             {
-                ConferenceId = "dataLove2021",
+                ConferenceId = "thatConference2021",
                 Events = new List<ConferenceEvent>()
             });
         }
